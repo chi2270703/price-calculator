@@ -1,110 +1,105 @@
-<<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>線上估價系統</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: url('https://www.toptal.com/designers/subtlepatterns/uploads/wood_pattern.png');
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        select, input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        .price {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>線上估價系統</h1>
-        <label>選擇材質：</label>
-        <select id="material">
-            <option value="康沛石">康沛石</option>
-            <option value="杜邦">杜邦</option>
-            <option value="LG">LG</option>
+import React, { useState } from "react";
+
+const materials = {
+  "康沛石": [
+    { color: "CP111", price: 108 },
+    { color: "CP112", price: 108 }
+  ],
+  "杜邦": [
+    { color: "GW101", price: 110 },
+    { color: "CW103", price: 110 }
+  ],
+  "LG": [
+    { color: "S009", price: 75 },
+    { color: "S022", price: 75 }
+  ]
+};
+
+const App = () => {
+  const [state, setState] = useState({
+    material: "康沛石",
+    color: "",
+    shape: "一字型",
+    dimensions: { length1: 1, width1: 60, length2: 1, width2: 60, length3: 1, width3: 60 }
+  });
+
+  const selectedMaterial = materials[state.material] || [];
+  const selectedColor = selectedMaterial.find(c => c.color === state.color);
+
+  const handleChange = (key, value) => {
+    setState(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleDimensionChange = (key, value) => {
+    setState(prev => ({
+      ...prev,
+      dimensions: { ...prev.dimensions, [key]: value }
+    }));
+  };
+
+  const handleDimensionBlur = (key, value) => {
+    setState(prev => ({
+      ...prev,
+      dimensions: { ...prev.dimensions, [key]: Math.max(key.includes("width") ? 60 : 1, parseInt(value) || 1) }
+    }));
+  };
+
+  const calculatePrice = () => {
+    if (!selectedColor) return 0;
+    let { length1, width1, length2, width2, length3, width3 } = state.dimensions;
+    let totalArea = 0;
+
+    if (state.shape === "一字型") {
+      totalArea = (width1 / 60) * length1 * selectedColor.price;
+    } else if (state.shape === "L型") {
+      totalArea = (((length1 * (width1 / 60)) + (length2 * (width2 / 60))) - 30) * selectedColor.price;
+    } else if (state.shape === "ㄇ字型") {
+      totalArea = (((length1 * (width1 / 60)) + (length2 * (width2 / 60)) + (length3 * (width3 / 60))) - 60) * selectedColor.price;
+    }
+
+    return Math.round(totalArea);
+  };
+
+  return (
+    <div style={{ padding: "20px", maxWidth: "400px", margin: "auto", backgroundImage: "url('https://www.toptal.com/designers/subtlepatterns/uploads/marble-pattern.png')", backgroundSize: "cover" }}>
+      <h1 style={{ textAlign: "center" }}>線上估價系統</h1>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <label>選擇材料：</label>
+        <select value={state.material} onChange={(e) => handleChange("material", e.target.value)}>
+          {Object.keys(materials).map((mat) => (
+            <option key={mat} value={mat}>{mat}</option>
+          ))}
         </select>
-        
+
         <label>選擇顏色：</label>
-        <select id="color">
-            <option value="108">CP111（108元）</option>
-            <option value="108">CP112（108元）</option>
+        <select value={state.color} onChange={(e) => handleChange("color", e.target.value)} disabled={!selectedMaterial.length}>
+          <option value="">請選擇顏色</option>
+          {selectedMaterial.map((c) => (
+            <option key={c.color} value={c.color}>{c.color}（${c.price}）</option>
+          ))}
         </select>
-        
+
         <label>形狀：</label>
-        <select id="shape">
-            <option value="one">一字型</option>
-            <option value="L">L型</option>
-            <option value="U">ㄇ字型</option>
+        <select value={state.shape} onChange={(e) => handleChange("shape", e.target.value)}>
+          <option value="一字型">一字型</option>
+          <option value="L型">L型</option>
+          <option value="ㄇ字型">ㄇ字型</option>
         </select>
-        
-        <label>長度1（cm）：</label>
-        <input type="number" id="length1" value="200">
-        
-        <label>寬度1（cm）：</label>
-        <input type="number" id="width1" value="60">
-        
-        <label>長度2（cm）（L型、ㄇ字型適用）：</label>
-        <input type="number" id="length2" value="200">
-        
-        <label>寬度2（cm）（L型、ㄇ字型適用）：</label>
-        <input type="number" id="width2" value="60">
-        
-        <label>長度3（cm）（ㄇ字型適用）：</label>
-        <input type="number" id="length3" value="200">
-        
-        <label>寬度3（cm）（ㄇ字型適用）：</label>
-        <input type="number" id="width3" value="60">
-        
-        <h2 class="price">總價：<span id="totalPrice">0</span> 元</h2>
+
+        {['length1', 'width1', 'length2', 'width2', 'length3', 'width3'].map((key, index) => (
+          (state.shape === "一字型" && index >= 2) || (state.shape === "L型" && index >= 4) ? null : (
+            <div key={key}>
+              <label>{`${key.includes("length") ? "長度" : "寬度"} (cm)：`}</label>
+              <input type="number" value={state.dimensions[key]} onChange={(e) => handleDimensionChange(key, e.target.value)} onBlur={(e) => handleDimensionBlur(key, e.target.value)} />
+            </div>
+          )
+        ))}
+
+        <h2 style={{ textAlign: "center" }}>總價：{calculatePrice()} 元</h2>
+      </div>
     </div>
-    
-    <script>
-        function calculatePrice() {
-            const shape = document.getElementById("shape").value;
-            const price = parseFloat(document.getElementById("color").value);
-            let length1 = parseFloat(document.getElementById("length1").value);
-            let width1 = parseFloat(document.getElementById("width1").value) / 60;
-            let length2 = parseFloat(document.getElementById("length2").value);
-            let width2 = parseFloat(document.getElementById("width2").value) / 60;
-            let length3 = parseFloat(document.getElementById("length3").value);
-            let width3 = parseFloat(document.getElementById("width3").value) / 60;
-            let total = 0;
+  );
+};
 
-            if (shape === "one") {
-                total = length1 * width1 * price;
-            } else if (shape === "L") {
-                total = ((length1 * width1) + (length2 * width2) - 30) * price;
-            } else if (shape === "U") {
-                total = ((length1 * width1) + (length2 * width2) + (length3 * width3) - 60) * price;
-            }
-            document.getElementById("totalPrice").textContent = Math.max(0, Math.round(total));
-        }
-
-        document.querySelectorAll("select, input").forEach(el => {
-            el.addEventListener("change", calculatePrice);
-        });
-
-        calculatePrice();
-    </script>
-</body>
-</html>
+export default App;
